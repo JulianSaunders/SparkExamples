@@ -1,0 +1,137 @@
+package scratch.datasets
+
+import org.apache.spark.sql.{Encoders, SparkSession}
+
+object DFvsDSPerformance extends App {
+
+  /*
+  User_ID,Product_ID,Gender,Age,Occupation,City_Category,Stay_In_Current_City_Years,Marital_Status,Product_Category_1,Product_Category_2,Product_Category_3,Purchase
+  1000001,P00069042,F,0-17,10,A,2,0,3,,,8370
+  1000001,P00248942,F,0-17,10,A,2,0,1,6,14,15200
+  */
+
+  case class RecordAllStrings(User_ID: String, Product_ID: String, Gender: String, Age: String, Occupation: String, City_Category: String, Stay_In_Current_City_Years: String, Marital_Status: String, Product_Category_1: String, Product_Category_2: String, Product_Category_3: String, Purchase: String)
+
+  case class Record(User_ID: String, Product_ID: String, Gender: String, Age: String, Occupation: Int, City_Category: String, Stay_In_Current_City_Years: Int, Marital_Status: String, Product_Category_1: Int, Product_Category_2: Int, Product_Category_3: Int, Purchase: Int)
+  val caseClassSchema = Encoders.product[Record].schema
+
+
+  val sparkSession = SparkSession.builder()
+    .appName("Dataset Basics")
+    .master("local")
+    .getOrCreate()
+
+  /* DATAFRAME */
+  val startTimeDF_ReadDataFrame = System.currentTimeMillis()
+  val creditsDF = sparkSession.read
+    .option("header", "true")
+    .option("inferSchema", "true")
+    .csv("C:\\scala-spark\\tut1\\train.csv")
+  val endTimeDF_ReadDataFrame = System.currentTimeMillis()
+
+  val startTimeDF_Count = System.currentTimeMillis()
+  val totalDFCount = creditsDF.count()
+  val endTimeDF_Count = System.currentTimeMillis()
+
+  val startTimeDF_Female = System.currentTimeMillis()
+  val filteredRowsDF_Female = creditsDF.filter("Gender ='F'")
+  val endTimeDF_Female = System.currentTimeMillis()
+
+  val startTimeDF_Male = System.currentTimeMillis()
+  val filteredRowsDF_Male = creditsDF.filter("Gender ='M'")
+  val endTimeDF_Male = System.currentTimeMillis()
+
+  val startTimeDF_Female2 = System.currentTimeMillis()
+  val filteredRowsDF_Female2 = creditsDF.filter("Gender ='F'")
+  val endTimeDF_Female2 = System.currentTimeMillis()
+
+  val startTimeDF_Count2 = System.currentTimeMillis()
+  val totalDFCount2 = creditsDF.count()
+  val endTimeDF_Count2 = System.currentTimeMillis()
+
+
+
+  /* DATASET 1 - All Strings*/
+  import sparkSession.implicits._
+  val startTimeDS_ReadDataSet = System.currentTimeMillis()
+  val creditsDS = sparkSession.read
+    .option("header", "true")
+    //    .option("inferSchema", "true")
+    .csv("C:\\scala-spark\\tut1\\train.csv")
+    .as[RecordAllStrings]
+  val endTimeDS_ReadDataSet = System.currentTimeMillis()
+
+  val startTimeDS_Count = System.currentTimeMillis()
+  val totalDSCount = creditsDS.count()
+  val endTimeDS_Count = System.currentTimeMillis()
+
+  val startTimeDS_Female1 = System.currentTimeMillis()
+  val filteredRowsDS_Female1 = creditsDS.filter("Gender ='F'")
+  val endTimeDS_Female1 = System.currentTimeMillis()
+
+  val startTimeDS_Male = System.currentTimeMillis()
+  val filteredRowsDS_Male = creditsDS.filter("Gender ='M'")
+  val endTimeDS_Male = System.currentTimeMillis()
+
+  val startTimeDS_Female2 = System.currentTimeMillis()
+  val filteredRowsDS_Female2 = creditsDS.filter("Gender ='F'")
+  val endTimeDS_Female2 = System.currentTimeMillis()
+
+  val startTimeDS_Count2 = System.currentTimeMillis()
+  val totalDSCount2 = creditsDS.count()
+  val endTimeDS_Count2 = System.currentTimeMillis()
+
+
+  /* DATASET 2 with Int's */
+  import sparkSession.implicits._
+  val startTimeDS2_ReadDataSet = System.currentTimeMillis()
+  val creditsDS2 = sparkSession.read
+    .option("header", "true")
+//    .option("inferSchema", "true")
+    .schema(caseClassSchema)
+    .csv("C:\\scala-spark\\tut1\\train.csv")
+    .as[Record]
+  val endTimeDS2_ReadDataSet = System.currentTimeMillis()
+
+  val startTimeDS2_Count = System.currentTimeMillis()
+  val totalDS2Count = creditsDS2.count()
+  val endTimeDS2_Count = System.currentTimeMillis()
+
+  val startTimeDS2_Female1 = System.currentTimeMillis()
+  val filteredRowsDS2_Female1 = creditsDS2.filter("Gender ='F'")
+  val endTimeDS2_Female1 = System.currentTimeMillis()
+
+  val startTimeDS2_Male = System.currentTimeMillis()
+  val filteredRowsDS2_Male = creditsDS2.filter("Gender ='M'")
+  val endTimeDS2_Male = System.currentTimeMillis()
+
+  val startTimeDS2_Female2 = System.currentTimeMillis()
+  val filteredRowsDS2_Female2 = creditsDS2.filter("Gender ='F'")
+  val endTimeDS2_Female2 = System.currentTimeMillis()
+
+  val startTimeDS2_Count2 = System.currentTimeMillis()
+  val totalDS2Count2 = creditsDS2.count()
+  val endTimeDS2_Count2 = System.currentTimeMillis()
+
+  /* TOTALS SUMMARY */
+  println("Time to read CSV into DF : " + (endTimeDF_ReadDataFrame - startTimeDF_ReadDataFrame) / 1000.0)
+  println("No. of Total Rows for DF " + totalDFCount + "    Time: " + (endTimeDF_Count - startTimeDF_Count) / 1000.0)
+  println("No. of Female for DF no.1 " + filteredRowsDF_Female.count() + "    Time: " + (endTimeDF_Female - startTimeDF_Female) / 1000.0)
+  println("No. of Male for DF  " + filteredRowsDF_Male.count() + "    Time: " + (endTimeDF_Male - startTimeDF_Male) / 1000.0)
+  println("No. of Female for DF no.2 " + filteredRowsDF_Female2.count() + "    Time: " + (endTimeDF_Female2 - startTimeDF_Female2) / 1000.0)
+  println("No. of Total Rows for DF 2 " + totalDFCount2 + "    Time: " + (endTimeDF_Count2 - startTimeDF_Count2) / 1000.0)
+
+  println("\nTime to read CSV into DS : " + (endTimeDS_ReadDataSet - startTimeDS_ReadDataSet) / 1000.0)
+  println("No. of Total Rows for DS " + totalDSCount + "   Time: " +(endTimeDS_Count - startTimeDS_Count) / 1000.0)
+  println("No. of Female for DS 1: " + filteredRowsDS_Female1.count() + "   Time: " + (endTimeDS_Female1 - startTimeDS_Female1) / 1000.0)
+  println("No. of Male for DS: " + filteredRowsDS_Male.count() + "   Time: " + (endTimeDS_Male - startTimeDS_Male) / 1000.0)
+  println("No. of Female for DS 2: " + filteredRowsDS_Female2.count() + "   Time: " + (endTimeDS_Female2 - startTimeDS_Female2) / 1000.0)
+  println("No. of Total Rows for DS 2" + totalDSCount2 + "   Time: " +(endTimeDS_Count2 - startTimeDS_Count2) / 1000.0)
+
+  println("\nTime to read CSV into DS2 with schema: " + (endTimeDS2_ReadDataSet - startTimeDS2_ReadDataSet) / 1000.0)
+  println("No. of Total Rows for DS2 " + totalDS2Count + "   Time: " +(endTimeDS2_Count - startTimeDS2_Count) / 1000.0)
+  println("No. of Female for DS2 1: " + filteredRowsDS2_Female1.count() + "   Time: " + (endTimeDS2_Female1 - startTimeDS2_Female1) / 1000.0)
+  println("No. of Male for DS2: " + filteredRowsDS2_Male.count() + "   Time: " + (endTimeDS2_Male - startTimeDS2_Male) / 1000.0)
+  println("No. of Female for DS2 2: " + filteredRowsDS2_Female2.count() + "   Time: " + (endTimeDS2_Female2 - startTimeDS2_Female2) / 1000.0)
+  println("No. of Total Rows for DS2 2" + totalDS2Count2 + "   Time: " +(endTimeDS2_Count2 - startTimeDS2_Count2) / 1000.0)
+}
